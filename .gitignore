@@ -1,0 +1,8 @@
+.gradle/
+**/build/
+.local/
+local.properties
+.idea/
+*.iml
+.DS_Store
+web/backend/data/*.json

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hello World Widget</string>
+    <string name="hello_world">Hello World</string>
+    <string name="widget_description">A simple widget that says Hello World.</string>
+</resources>

@@ -1,0 +1,18 @@
+services:
+  android:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/workspace
+      - gradle-cache:/home/gradle/.gradle
+      - adb-config:/home/gradle/.android
+    entrypoint: []
+    command: ["bash", "-lc", "sleep infinity"]
+
+volumes:
+  gradle-cache:
+  adb-config:
