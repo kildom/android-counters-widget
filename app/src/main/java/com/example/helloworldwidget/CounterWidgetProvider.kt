@@ -99,6 +99,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 }
                 views.setTextColor(buttonId, buttonText)
             }
+            views.setTextViewTextSize(R.id.settings_button, android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
+            views.setTextViewTextSize(R.id.refresh_button, android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
             views.setInt(R.id.counter_widget_root, "setBackgroundColor", CounterRepository.backgroundColor(context))
             views.setTextColor(R.id.error_message, CounterRepository.overdueColor(context))
             views.setTextColor(R.id.empty_message, CounterRepository.textColor(context))

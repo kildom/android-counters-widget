@@ -37,12 +37,24 @@ class CounterActionActivity : Activity() {
             .setTitle(counterName)
             .setItems(items) { _, selected ->
                 when (selected) {
-                    0 -> sendEdit(targetDate = Counter.todayPlusDays(counterPeriod))
+                    0 -> confirmReset()
                     1 -> showEditDialog(Counter(counterId, counterName, counterPeriod, counterTarget))
                     2 -> showDayOffsetDialog(1)
                     3 -> showDayOffsetDialog(-1)
                     4 -> confirmDelete()
                 }
+            }
+            .setOnCancelListener { finish() }
+            .show()
+    }
+
+    private fun confirmReset() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reset_counter)
+            .setMessage(getString(R.string.reset_confirmation, counterName))
+            .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
+            .setPositiveButton(R.string.reset) { _, _ ->
+                sendEdit(targetDate = Counter.todayPlusDays(counterPeriod))
             }
             .setOnCancelListener { finish() }
             .show()

@@ -16,6 +16,8 @@
     <string name="more_icon">⋮</string>
     <string name="counter_actions">Counter actions</string>
     <string name="reset">Reset</string>
+    <string name="reset_counter">Reset counter?</string>
+    <string name="reset_confirmation">Reset %1$s to today plus its period?</string>
     <string name="edit">Edit</string>
     <string name="postpone">Postpone</string>
     <string name="speed_up">Speed up</string>
@@ -23,6 +25,7 @@
     <string name="name">Name</string>
     <string name="period_days">Period (days)</string>
     <string name="days">Days</string>
+    <string name="days_of_period">(%1$d of %2$d days)</string>
     <string name="add_counter_title">Add counter</string>
     <string name="edit_counter">Edit counter</string>
     <string name="name_required">Enter a name.</string>

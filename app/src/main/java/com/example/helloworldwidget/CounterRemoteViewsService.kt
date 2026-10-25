@@ -46,8 +46,10 @@ private class CounterViewsFactory(
         row.setTextColor(R.id.counter_days, CounterRepository.textColor(context))
         row.setTextColor(R.id.counter_menu_button, CounterRepository.textColor(context))
         val days = counter.daysRemaining()
-        val dayText = if (days == 1L || days == -1L) "day" else "days"
-        row.setTextViewText(R.id.counter_days, "($days $dayText)")
+        row.setTextViewText(
+            R.id.counter_days,
+            context.getString(R.string.days_of_period, days, counter.period),
+        )
 
         val fillInIntent = Intent()
             .putExtra(CounterActionActivity.EXTRA_COUNTER_ID, counter.id)
