@@ -6,6 +6,8 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.os.Build
 import android.widget.RemoteViews
 
 class CounterWidgetProvider : AppWidgetProvider() {
@@ -56,6 +58,18 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 ),
             )
 
+            val settingsIntent = Intent(context, SettingsActivity::class.java)
+                .putExtra(SettingsActivity.EXTRA_OPENED_FROM_WIDGET, true)
+            views.setOnClickPendingIntent(
+                R.id.settings_button,
+                PendingIntent.getActivity(
+                    context,
+                    widgetId * 10 + 4,
+                    settingsIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
+
             val refreshIntent = Intent(context, CounterWidgetProvider::class.java)
                 .setAction(ACTION_REFRESH)
             views.setOnClickPendingIntent(
@@ -67,6 +81,27 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
             )
+            val buttonBackground = CounterRepository.textColor(context)
+            val buttonText = if (hasLightTextContrast(buttonBackground)) {
+                android.graphics.Color.WHITE
+            } else {
+                android.graphics.Color.BLACK
+            }
+            listOf(R.id.add_button, R.id.settings_button, R.id.refresh_button).forEach { buttonId ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    views.setColorStateList(
+                        buttonId,
+                        "setBackgroundTintList",
+                        ColorStateList.valueOf(buttonBackground),
+                    )
+                } else {
+                    views.setInt(buttonId, "setBackgroundColor", buttonBackground)
+                }
+                views.setTextColor(buttonId, buttonText)
+            }
+            views.setInt(R.id.counter_widget_root, "setBackgroundColor", CounterRepository.backgroundColor(context))
+            views.setTextColor(R.id.error_message, CounterRepository.overdueColor(context))
+            views.setTextColor(R.id.empty_message, CounterRepository.textColor(context))
 
             val serviceIntent = Intent(context, CounterRemoteViewsService::class.java)
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
@@ -94,6 +129,23 @@ class CounterWidgetProvider : AppWidgetProvider() {
 
             manager.updateAppWidget(widgetId, views)
             manager.notifyAppWidgetViewDataChanged(widgetId, R.id.counter_list)
+        }
+
+        private fun hasLightTextContrast(color: Int): Boolean {
+            fun linear(channel: Int): Double {
+                val normalized = channel / 255.0
+                return if (normalized <= 0.04045) {
+                    normalized / 12.92
+                } else {
+                    Math.pow((normalized + 0.055) / 1.055, 2.4)
+                }
+            }
+
+            val luminance =
+                0.2126 * linear(android.graphics.Color.red(color)) +
+                    0.7152 * linear(android.graphics.Color.green(color)) +
+                    0.0722 * linear(android.graphics.Color.blue(color))
+            return luminance < 0.179
         }
     }
 }

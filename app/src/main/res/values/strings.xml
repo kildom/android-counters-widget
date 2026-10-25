@@ -3,13 +3,15 @@
     <string name="app_name">Event Counters</string>
     <string name="widget_description">Counters showing time remaining until your events.</string>
     <string name="settings_title">Event Counters</string>
-    <string name="settings_instructions">Enter the private HTTP or HTTPS URL for your counters. Keep this URL secret; it grants access to your data.</string>
+    <string name="backend_url">Backend URL</string>
+    <string name="settings_instructions">Configure your private HTTP or HTTPS URL and widget colors. Keep the URL secret; it grants access to your data.</string>
     <string name="endpoint_hint">http://example.com/backend.php?uid=secret</string>
-    <string name="save_url">Save URL and refresh</string>
+    <string name="save_url">Save settings and refresh</string>
     <string name="add">+ Add</string>
     <string name="add_counter">Add counter</string>
     <string name="refresh">Refresh counters</string>
     <string name="refresh_icon">⟳</string>
+    <string name="settings_icon">⚙</string>
     <string name="no_counters">No counters yet. Add one or refresh.</string>
     <string name="more_icon">⋮</string>
     <string name="counter_actions">Counter actions</string>
@@ -28,6 +30,13 @@
     <string name="delete_counter">Delete counter?</string>
     <string name="delete_confirmation">Delete %1$s? This cannot be undone.</string>
     <string name="request_failed">The request failed.</string>
+    <string name="background_color">Widget background color (#RRGGBB)</string>
+    <string name="text_color">Text color (#RRGGBB)</string>
+    <string name="overdue_color">Overdue text color (#RRGGBB)</string>
+    <string name="choose_color">Choose color</string>
+    <string name="red">Red</string>
+    <string name="green">Green</string>
+    <string name="blue">Blue</string>
     <color name="counter_negative">#FFFF6B6B</color>
     <color name="counter_normal">#FFFFFFFF</color>
 </resources>

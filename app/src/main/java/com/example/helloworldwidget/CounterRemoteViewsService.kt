@@ -40,8 +40,11 @@ private class CounterViewsFactory(
         row.setTextViewText(R.id.counter_percent, String.format(Locale.getDefault(), "%.0f%%", percent))
         row.setTextColor(
             R.id.counter_percent,
-            context.getColor(if (percent < 0) R.color.counter_negative else R.color.counter_normal),
+            if (percent < 0) CounterRepository.overdueColor(context) else CounterRepository.textColor(context),
         )
+        row.setTextColor(R.id.counter_name, CounterRepository.textColor(context))
+        row.setTextColor(R.id.counter_days, CounterRepository.textColor(context))
+        row.setTextColor(R.id.counter_menu_button, CounterRepository.textColor(context))
         val days = counter.daysRemaining()
         val dayText = if (days == 1L || days == -1L) "day" else "days"
         row.setTextViewText(R.id.counter_days, "($days $dayText)")

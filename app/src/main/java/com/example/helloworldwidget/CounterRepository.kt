@@ -1,6 +1,7 @@
 package com.example.helloworldwidget
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import org.json.JSONArray
@@ -18,6 +19,12 @@ object CounterRepository {
     private const val KEY_COUNTERS = "counters"
     private const val KEY_LAST_ATTEMPT = "last_attempt"
     private const val KEY_ERROR = "error"
+    private const val KEY_BACKGROUND_COLOR = "background_color"
+    private const val KEY_TEXT_COLOR = "text_color"
+    private const val KEY_OVERDUE_COLOR = "overdue_color"
+    private const val DEFAULT_BACKGROUND_COLOR = 0xFF6750A4.toInt()
+    private const val DEFAULT_TEXT_COLOR = Color.WHITE
+    private const val DEFAULT_OVERDUE_COLOR = 0xFFFF6B6B.toInt()
     private const val MIN_FETCH_INTERVAL_MS = 60_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
     private val executor = Executors.newSingleThreadExecutor()
@@ -26,19 +33,50 @@ object CounterRepository {
     fun endpoint(context: Context): String =
         preferences(context).getString(KEY_ENDPOINT, "").orEmpty()
 
+    fun backgroundColor(context: Context): Int =
+        preferences(context).getInt(KEY_BACKGROUND_COLOR, DEFAULT_BACKGROUND_COLOR)
+
+    fun textColor(context: Context): Int =
+        preferences(context).getInt(KEY_TEXT_COLOR, DEFAULT_TEXT_COLOR)
+
+    fun overdueColor(context: Context): Int =
+        preferences(context).getInt(KEY_OVERDUE_COLOR, DEFAULT_OVERDUE_COLOR)
+
+    fun saveColors(context: Context, background: Int, text: Int, overdue: Int) {
+        preferences(context).edit()
+            .putInt(KEY_BACKGROUND_COLOR, background)
+            .putInt(KEY_TEXT_COLOR, text)
+            .putInt(KEY_OVERDUE_COLOR, overdue)
+            .apply()
+    }
+
+    fun parseColor(value: String): Int {
+        val normalized = value.trim().let { if (it.startsWith("#")) it else "#$it" }
+        require(Regex("^#[0-9a-fA-F]{6}$").matches(normalized)) {
+            "Enter a color as #RRGGBB."
+        }
+        return try {
+            Color.parseColor(normalized)
+        } catch (exception: IllegalArgumentException) {
+            throw IllegalArgumentException("Enter a color as #RRGGBB or #AARRGGBB.", exception)
+        }
+    }
+
     fun saveEndpoint(context: Context, value: String) {
         val endpoint = value.trim()
-        val parsed = try {
-            URL(endpoint)
-        } catch (exception: Exception) {
-            throw IllegalArgumentException("Enter a complete HTTP or HTTPS URL.", exception)
-        }
-        require(
-            (parsed.protocol.equals("https", ignoreCase = true) ||
-                parsed.protocol.equals("http", ignoreCase = true)) &&
-                !parsed.host.isNullOrBlank()
-        ) {
-            "Enter a complete HTTP or HTTPS URL."
+        if (endpoint.isNotEmpty()) {
+            val parsed = try {
+                URL(endpoint)
+            } catch (exception: Exception) {
+                throw IllegalArgumentException("Enter a complete HTTP or HTTPS URL.", exception)
+            }
+            require(
+                (parsed.protocol.equals("https", ignoreCase = true) ||
+                    parsed.protocol.equals("http", ignoreCase = true)) &&
+                    !parsed.host.isNullOrBlank()
+            ) {
+                "Enter a complete HTTP or HTTPS URL."
+            }
         }
         val prefs = preferences(context)
         if (prefs.getString(KEY_ENDPOINT, "") != endpoint) {

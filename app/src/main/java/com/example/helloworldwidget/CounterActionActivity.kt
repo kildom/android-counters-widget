@@ -3,6 +3,7 @@ package com.example.helloworldwidget
 import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
+import android.view.WindowManager
 import android.text.InputType
 import android.view.ViewGroup
 import android.widget.EditText
@@ -104,17 +105,31 @@ class CounterActionActivity : Activity() {
             hint = getString(R.string.days)
             inputType = InputType.TYPE_CLASS_NUMBER
             setText("1")
-            setSelection(text.length)
+            setSelectAllOnFocus(true)
+        }
+        val inputContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val margin = (24 * resources.displayMetrics.density).toInt()
+            setPadding(margin, margin / 2, margin, 0)
+            addView(daysInput, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ))
         }
         AlertDialog.Builder(this)
             .setTitle(if (direction > 0) R.string.postpone else R.string.speed_up)
-            .setView(daysInput)
+            .setView(inputContainer)
             .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
             .setPositiveButton(android.R.string.ok, null)
             .setOnCancelListener { finish() }
             .create()
             .apply {
                 setOnShowListener {
+                    window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                    daysInput.requestFocus()
+                    daysInput.post {
+                        daysInput.selectAll()
+                    }
                     getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                         val days = daysInput.text.toString().toIntOrNull()
                         if (days == null || days < 1) {

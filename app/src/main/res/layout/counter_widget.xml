@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/counter_widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
@@ -15,9 +16,10 @@
         <Button
             android:id="@+id/add_button"
             android:layout_width="wrap_content"
-            android:layout_height="44dp"
+            android:layout_height="48dp"
             android:contentDescription="@string/add_counter"
             android:minWidth="64dp"
+            android:background="@drawable/toolbar_button_background"
             android:text="@string/add" />
 
         <TextView
@@ -26,11 +28,23 @@
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/settings_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/settings_title"
+            android:minWidth="48dp"
+            android:background="@drawable/toolbar_button_background"
+            android:text="@string/settings_icon" />
+
+        <Button
             android:id="@+id/refresh_button"
             android:layout_width="48dp"
-            android:layout_height="44dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="@string/refresh"
             android:minWidth="48dp"
+            android:background="@drawable/toolbar_button_background"
             android:text="@string/refresh_icon" />
     </LinearLayout>
 
