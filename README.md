@@ -67,24 +67,25 @@ Transient network failures and HTTP error responses are retried up to five times
 - `app/src/main/java/.../CounterWidgetProvider.kt` updates widget instances and handles explicit refresh requests.
 - `app/src/main/java/.../CounterRepository.kt` performs throttled network requests and caches counters locally.
 - `app/src/main/res/layout/counter_widget.xml` defines the widget toolbar and scrollable list.
-- `web/backend/backend.php` implements the JSON API and stores each UID's counters in `web/backend/data/`.
+- `web/backend.php` implements the JSON API and stores each UID's counters in `web/data/`.
 - `Dockerfile` and `docker-compose.yml` provide the containerized build environment.
 
 ## Web backend
 
 The PHP command-line runtime is installed in the development container. Start the
-backend from the `web/backend` directory with:
+backend from the `web` directory with:
 
 ```sh
+cd web
 php -S 0.0.0.0:8000
 ```
 
 For local development, the API is available at `http://localhost:8000/backend.php?uid=YOUR_UID`.
 The Android app accepts HTTP and HTTPS endpoints; use HTTPS outside development
 because the URL contains a private key. Each alphanumeric `uid` maps to
-`web/backend/data/YOUR_UID.json`, which must contain a JSON array of counters.
+`web/data/YOUR_UID.json`, which must contain a JSON array of counters.
 Run the HTTP integration test with:
 
 ```sh
-php web/backend/tests/backend_test.php
+php web/tests/backend_test.php
 ```

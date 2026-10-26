@@ -5,4 +5,4 @@ local.properties
 .idea/
 *.iml
 .DS_Store
-web/backend/data/*.json
+web/data/*.json
