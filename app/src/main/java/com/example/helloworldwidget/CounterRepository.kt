@@ -39,9 +39,19 @@ object CounterRepository {
     private const val KEY_BACKGROUND_COLOR = "background_color"
     private const val KEY_TEXT_COLOR = "text_color"
     private const val KEY_OVERDUE_COLOR = "overdue_color"
+    private const val KEY_POSITIVE_PROGRESS_COLOR = "positive_progress_color"
+    private const val KEY_NEGATIVE_PROGRESS_COLOR = "negative_progress_color"
+    private const val KEY_PROGRESS_BACKGROUND_COLOR = "progress_background_color"
+    private const val KEY_PROGRESS_TEXT_COLOR = "progress_text_color"
+    private const val KEY_BUTTON_BACKGROUND_COLOR = "button_background_color"
     private const val DEFAULT_BACKGROUND_COLOR = 0xFF6750A4.toInt()
     private const val DEFAULT_TEXT_COLOR = Color.WHITE
     private const val DEFAULT_OVERDUE_COLOR = 0xFFFF6B6B.toInt()
+    private const val DEFAULT_POSITIVE_PROGRESS_COLOR = 0xFF2196F3.toInt()
+    private const val DEFAULT_NEGATIVE_PROGRESS_COLOR = 0xFFF44336.toInt()
+    private const val DEFAULT_PROGRESS_BACKGROUND_COLOR = 0xFFC0C0C0.toInt()
+    private const val DEFAULT_PROGRESS_TEXT_COLOR = Color.BLACK
+    private const val DEFAULT_BUTTON_BACKGROUND_COLOR = 0xFF808080.toInt()
     private const val MIN_FETCH_INTERVAL_MS = 60_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
     private const val MAX_REQUEST_ATTEMPTS = 5
@@ -129,11 +139,41 @@ object CounterRepository {
     fun overdueColor(context: Context): Int =
         preferences(context).getInt(KEY_OVERDUE_COLOR, DEFAULT_OVERDUE_COLOR)
 
-    fun saveColors(context: Context, background: Int, text: Int, overdue: Int) {
+    fun positiveProgressColor(context: Context): Int =
+        preferences(context).getInt(KEY_POSITIVE_PROGRESS_COLOR, DEFAULT_POSITIVE_PROGRESS_COLOR)
+
+    fun negativeProgressColor(context: Context): Int =
+        preferences(context).getInt(KEY_NEGATIVE_PROGRESS_COLOR, DEFAULT_NEGATIVE_PROGRESS_COLOR)
+
+    fun progressBackgroundColor(context: Context): Int =
+        preferences(context).getInt(KEY_PROGRESS_BACKGROUND_COLOR, DEFAULT_PROGRESS_BACKGROUND_COLOR)
+
+    fun progressTextColor(context: Context): Int =
+        preferences(context).getInt(KEY_PROGRESS_TEXT_COLOR, DEFAULT_PROGRESS_TEXT_COLOR)
+
+    fun buttonBackgroundColor(context: Context): Int =
+        preferences(context).getInt(KEY_BUTTON_BACKGROUND_COLOR, DEFAULT_BUTTON_BACKGROUND_COLOR)
+
+    fun saveWidgetColors(
+        context: Context,
+        background: Int,
+        text: Int,
+        overdue: Int,
+        positiveProgress: Int,
+        negativeProgress: Int,
+        progressBackground: Int,
+        progressText: Int,
+        buttonBackground: Int,
+    ) {
         preferences(context).edit()
             .putInt(KEY_BACKGROUND_COLOR, background)
             .putInt(KEY_TEXT_COLOR, text)
             .putInt(KEY_OVERDUE_COLOR, overdue)
+            .putInt(KEY_POSITIVE_PROGRESS_COLOR, positiveProgress)
+            .putInt(KEY_NEGATIVE_PROGRESS_COLOR, negativeProgress)
+            .putInt(KEY_PROGRESS_BACKGROUND_COLOR, progressBackground)
+            .putInt(KEY_PROGRESS_TEXT_COLOR, progressText)
+            .putInt(KEY_BUTTON_BACKGROUND_COLOR, buttonBackground)
             .apply()
     }
 

@@ -93,13 +93,14 @@
 - The toolbar should have:
   - A compact Add button, which opens a dialog to add a counter with Name and Period fields. The backend sets the initial target date to current date + period.
   - A compact three-dot options button with Refresh and Setup menu items. Refresh fetches counters; Setup opens the configuration UI.
-- Setup allows editing the endpoint URL and widget background, normal text, and overdue text colors. Use the in-app RGB color picker and retain saved colors. Toolbar button backgrounds use the configured text color and black/white foreground chosen for contrast.
+- Setup allows editing the endpoint URL. A separate widget-colors screen configures widget background, normal text, overdue percentage text, positive and negative progress bars, progress track, progress day text, and button background. Use the in-app RGB color picker and retain saved colors. Toolbar button foreground is black or white based on contrast with the configured button background.
 - Widget-triggered dialogs and configuration should appear over the home screen and close cleanly when dismissed or when navigating between widget actions.
 - Each counter in the list should display:
   - The counter's name.
   - The percentage of time left until the target date, calculated as `((targetDate - currentDate) / period) * 100` and displayed with a percent sign.
     If percentage is less than 0, use the configurable overdue text color and retain the negative sign.
-  - Days remaining and period in smaller text, formatted as `(remaining days of period days)`, for example `(20 of 31 days)`.
+  - A horizontal progress bar under the name, with the filled portion based on the absolute percentage clamped to 0-100%. Use the positive color for non-negative percentages and the negative color for overdue percentages. The day text overlays the bar, displays `remaining of period`, and aligns left when the absolute percentage is greater than 50%, otherwise right.
+  - The numeric percentage remains unclamped and is displayed with a percent sign.
   - Tapping anywhere on the counter row opens its action menu; do not add a separate per-row three-dot button.
   - The action menu contains:
     - Reset button that asks for confirmation, then executes an edit command with target date set to current date + period.

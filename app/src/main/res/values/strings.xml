@@ -4,7 +4,7 @@
     <string name="widget_description">Counters showing time remaining until your events.</string>
     <string name="settings_title">Event Counters</string>
     <string name="backend_url">Backend URL</string>
-    <string name="settings_instructions">Configure your private HTTP or HTTPS URL and widget colors. Keep the URL secret; it grants access to your data.</string>
+    <string name="settings_instructions">Configure your private HTTP or HTTPS URL. Keep the URL secret; it grants access to your data.</string>
     <string name="endpoint_hint">http://example.com/backend.php?uid=secret</string>
     <string name="save_url">Save settings and refresh</string>
     <string name="add">+ Add</string>
@@ -24,7 +24,7 @@
     <string name="name">Name</string>
     <string name="period_days">Period (days)</string>
     <string name="days">Days</string>
-    <string name="days_of_period">(%1$d of %2$d days)</string>
+    <string name="remaining_days_of_period">%1$d of %2$d</string>
     <string name="add_counter_title">Add counter</string>
     <string name="edit_counter">Edit counter</string>
     <string name="name_required">Enter a name.</string>
@@ -32,9 +32,17 @@
     <string name="delete_counter">Delete counter?</string>
     <string name="delete_confirmation">Delete %1$s? This cannot be undone.</string>
     <string name="request_failed">The request failed.</string>
-    <string name="background_color">Widget background color (#RRGGBB)</string>
-    <string name="text_color">Text color (#RRGGBB)</string>
-    <string name="overdue_color">Overdue text color (#RRGGBB)</string>
+    <string name="configure_colors">Configure widget colors</string>
+    <string name="widget_colors_title">Widget colors</string>
+    <string name="widget_background_color">Widget background</string>
+    <string name="text_color">Item text</string>
+    <string name="overdue_color">Overdue percentage text</string>
+    <string name="positive_progress_color">Positive progress bar</string>
+    <string name="negative_progress_color">Negative progress bar</string>
+    <string name="progress_background_color">Progress bar background</string>
+    <string name="progress_text_color">Progress bar day text</string>
+    <string name="button_background_color">Buttons background</string>
+    <string name="save_colors">Save colors</string>
     <string name="choose_color">Choose color</string>
     <string name="red">Red</string>
     <string name="green">Green</string>

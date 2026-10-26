@@ -70,7 +70,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 ),
             )
 
-            val buttonBackground = CounterRepository.textColor(context)
+            val buttonBackground = CounterRepository.buttonBackgroundColor(context)
             val buttonText = if (hasLightTextContrast(buttonBackground)) {
                 android.graphics.Color.WHITE
             } else {
