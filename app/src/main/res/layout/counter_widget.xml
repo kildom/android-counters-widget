@@ -27,22 +27,43 @@
             android:background="@drawable/toolbar_button_background"
             android:text="@string/add" />
 
+        <ImageView
+            android:id="@+id/setup_button"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/toolbar_button_background"
+            android:contentDescription="@string/setup"
+            android:gravity="center"
+            android:padding="3dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_settings" />
+
+        <TextView
+            android:id="@+id/refresh_success_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:singleLine="true"
+            android:text="@string/refreshed"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
 
         <ImageView
-            android:id="@+id/toolbar_menu_button"
-            android:layout_width="36dp"
+            android:id="@+id/refresh_button"
+            android:layout_width="26dp"
             android:layout_height="26dp"
-            android:layout_marginStart="8dp"
             android:background="@drawable/toolbar_button_background"
-            android:contentDescription="@string/toolbar_menu"
+            android:contentDescription="@string/refresh"
             android:gravity="center"
-            android:paddingBottom="3dp"
+            android:padding="2dp"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_more_vertical" />
+            android:src="@drawable/ic_refresh" />
     </LinearLayout>
 
     <TextView

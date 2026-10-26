@@ -70,7 +70,7 @@ class SettingsActivity : Activity() {
             if (CounterRepository.endpoint(this).isBlank()) {
                 finish()
             } else {
-                CounterRepository.refreshIfStale(this) {
+                CounterRepository.refreshNow(this) { _ ->
                     CounterWidgetProvider.updateAllWidgets(this)
                     finish()
                 }

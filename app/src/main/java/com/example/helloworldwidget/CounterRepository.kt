@@ -34,7 +34,6 @@ object CounterRepository {
     private const val PREFS = "counter_widget"
     private const val KEY_ENDPOINT = "endpoint"
     private const val KEY_COUNTERS = "counters"
-    private const val KEY_LAST_ATTEMPT = "last_attempt"
     private const val KEY_ERROR = "error"
     private const val KEY_BACKGROUND_COLOR = "background_color"
     private const val KEY_TEXT_COLOR = "text_color"
@@ -56,7 +55,6 @@ object CounterRepository {
     private const val DEFAULT_POSITIVE_PROGRESS_TEXT_COLOR = Color.BLACK
     private const val DEFAULT_NEGATIVE_PROGRESS_TEXT_COLOR = Color.BLACK
     private const val DEFAULT_BUTTON_BACKGROUND_COLOR = 0xFF808080.toInt()
-    private const val MIN_FETCH_INTERVAL_MS = 60_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
     private const val MAX_REQUEST_ATTEMPTS = 5
     private const val RETRY_DELAY_MS = 3_000L
@@ -224,7 +222,6 @@ object CounterRepository {
             prefs.edit()
                 .putString(KEY_ENDPOINT, endpoint)
                 .putString(KEY_COUNTERS, "[]")
-                .putLong(KEY_LAST_ATTEMPT, 0L)
                 .remove(KEY_ERROR)
                 .apply()
         }
@@ -243,36 +240,30 @@ object CounterRepository {
         saveError(context, message)
     }
 
-    fun refreshIfStale(context: Context, onComplete: (() -> Unit)? = null) {
-        refresh(context, force = false, onComplete = onComplete)
+    fun refreshNow(context: Context, onComplete: ((Boolean) -> Unit)? = null) {
+        refresh(context, onComplete)
     }
 
-    fun refreshNow(context: Context, onComplete: (() -> Unit)? = null) {
-        refresh(context, force = true, onComplete = onComplete)
-    }
-
-    private fun refresh(context: Context, force: Boolean, onComplete: (() -> Unit)?) {
+    private fun refresh(context: Context, onComplete: ((Boolean) -> Unit)?) {
         val appContext = context.applicationContext
         executor.execute {
-            val prefs = preferences(appContext)
+            var succeeded = false
             try {
-                if (!deviceCanRunRequests(appContext)) return@execute
-                val lastAttempt = prefs.getLong(KEY_LAST_ATTEMPT, 0L)
-                if (force || System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
-                    prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
+                if (deviceCanRunRequests(appContext)) {
                     try {
                         val response = requestWithRetries(appContext, JSONObject().put("command", "get"))
                         saveResponse(appContext, response, "get")
+                        succeeded = true
                     } catch (cancelled: RequestCancelledException) {
-                        return@execute
+                        Unit
                     } catch (exception: Exception) {
                         saveError(appContext, exception.message ?: "Could not refresh counters.")
                     }
                 }
-                onComplete?.let { mainHandler.post(it) }
             } catch (exception: Exception) {
                 saveError(appContext, exception.message ?: "Could not refresh counters.")
-                onComplete?.let { mainHandler.post(it) }
+            } finally {
+                onComplete?.let { callback -> mainHandler.post { callback(succeeded) } }
             }
         }
     }
@@ -465,7 +456,6 @@ object CounterRepository {
         preferences(context).edit()
             .putString(KEY_COUNTERS, parsed.toString())
             .remove(KEY_ERROR)
-            .putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis())
             .apply()
     }
 

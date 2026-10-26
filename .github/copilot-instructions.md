@@ -8,7 +8,7 @@
 - Counter information comes from a user-configured private HTTP or HTTPS URL returning JSON. HTTPS is recommended; HTTP is enabled for development, so do not claim that HTTP protects the secret URL.
 - The widget should have optimized power consumption.
   - Android does not provide a reliable widget visibility callback. Do not add background polling or fetch while the widget may be hidden.
-  - Do not poll in the background. Automatic/stale refreshes are limited to once per minute, but the user's explicit Refresh action bypasses that throttle and starts a request immediately. Add/edit/delete commands are sent immediately after the user requests them.
+  - Do not poll in the background. Refresh runs whenever the user requests it; do not throttle refresh requests. Add/edit/delete commands are sent immediately after the user requests them.
   - Do not start or continue network requests while the display is off or the keyguard is locked. Cancel active requests and retry delays on screen-off; do not save a lock-cancellation as a server error.
 - Widget should have as low as possible memory footprint and CPU usage.
 - Keep widget rendering resilient to network and server errors; show a useful message while retaining the widget UI.
@@ -92,7 +92,7 @@
 - The widget should display a toolbar at the top and a scrollable list of counters below it.
 - The toolbar should have:
   - A compact Add button, which opens a dialog to add a counter with Name and Period fields. The backend sets the initial target date to current date + period.
-  - A compact three-dot options button with Refresh and Setup menu items. Refresh fetches counters; Setup opens the configuration UI.
+  - Compact Add and icon-only Setup buttons grouped at the left, with an icon-only Refresh button at the right. Refresh fetches counters immediately; Setup opens the configuration UI.
 - Setup allows editing the endpoint URL. A separate widget-colors screen configures widget background, normal text, overdue percentage text, positive and negative progress bars, progress track, text on the track, text on each progress fill, and button background. Use the in-app RGB color picker and retain saved colors. All three progress-label text colors default to black. Toolbar button foreground is black or white based on contrast with the configured button background.
 - Widget-triggered dialogs and configuration should appear over the home screen and close cleanly when dismissed or when navigating between widget actions.
 - Each counter in the list should display:

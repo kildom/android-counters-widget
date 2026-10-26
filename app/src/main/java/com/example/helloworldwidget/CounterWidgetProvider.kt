@@ -8,6 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.widget.RemoteViews
 
 class CounterWidgetProvider : AppWidgetProvider() {
@@ -23,8 +26,12 @@ class CounterWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
             val pendingResult = goAsync()
-            CounterRepository.refreshIfStale(context) {
-                updateAllWidgets(context)
+            CounterRepository.refreshNow(context) { succeeded ->
+                if (succeeded) {
+                    showRefreshSuccess(context)
+                } else {
+                    updateAllWidgets(context)
+                }
                 pendingResult.finish()
             }
         }
@@ -32,11 +39,28 @@ class CounterWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "com.example.helloworldwidget.REFRESH"
+        private const val REFRESH_SUCCESS_DURATION_MS = 3_000L
+        private val mainHandler = Handler(Looper.getMainLooper())
+        @Volatile
+        private var refreshSuccessUntil = 0L
+        private var refreshSuccessHideTask: Runnable? = null
 
         fun updateAllWidgets(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val component = ComponentName(context, CounterWidgetProvider::class.java)
             manager.getAppWidgetIds(component).forEach { updateWidget(context, manager, it) }
+        }
+
+        private fun showRefreshSuccess(context: Context) {
+            val appContext = context.applicationContext
+            refreshSuccessUntil = SystemClock.elapsedRealtime() + REFRESH_SUCCESS_DURATION_MS
+            refreshSuccessHideTask?.let(mainHandler::removeCallbacks)
+            updateAllWidgets(appContext)
+            refreshSuccessHideTask = Runnable {
+                refreshSuccessUntil = 0L
+                refreshSuccessHideTask = null
+                updateAllWidgets(appContext)
+            }.also { mainHandler.postDelayed(it, REFRESH_SUCCESS_DURATION_MS) }
         }
 
         private fun updateWidget(
@@ -58,14 +82,26 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 ),
             )
 
-            val optionsIntent = Intent(context, CounterActionActivity::class.java)
-                .putExtra(CounterActionActivity.EXTRA_ACTION, CounterActionActivity.ACTION_WIDGET_OPTIONS)
+            val setupIntent = Intent(context, SettingsActivity::class.java)
+                .putExtra(SettingsActivity.EXTRA_OPENED_FROM_WIDGET, true)
             views.setOnClickPendingIntent(
-                R.id.toolbar_menu_button,
+                R.id.setup_button,
                 PendingIntent.getActivity(
                     context,
                     widgetId * 10 + 2,
-                    optionsIntent,
+                    setupIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                ),
+            )
+
+            val refreshIntent = Intent(context, CounterWidgetProvider::class.java)
+                .setAction(ACTION_REFRESH)
+            views.setOnClickPendingIntent(
+                R.id.refresh_button,
+                PendingIntent.getBroadcast(
+                    context,
+                    widgetId * 10 + 4,
+                    refreshIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
             )
@@ -83,24 +119,48 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     ColorStateList.valueOf(buttonBackground),
                 )
                 views.setColorStateList(
-                    R.id.toolbar_menu_button,
+                    R.id.setup_button,
                     "setBackgroundTintList",
                     ColorStateList.valueOf(buttonBackground),
                 )
                 views.setColorStateList(
-                    R.id.toolbar_menu_button,
+                    R.id.refresh_button,
+                    "setBackgroundTintList",
+                    ColorStateList.valueOf(buttonBackground),
+                )
+                views.setColorStateList(
+                    R.id.setup_button,
+                    "setImageTintList",
+                    ColorStateList.valueOf(buttonText),
+                )
+                views.setColorStateList(
+                    R.id.refresh_button,
                     "setImageTintList",
                     ColorStateList.valueOf(buttonText),
                 )
             } else {
                 views.setInt(R.id.add_button, "setBackgroundColor", buttonBackground)
-                views.setInt(R.id.toolbar_menu_button, "setBackgroundColor", buttonBackground)
-                views.setInt(R.id.toolbar_menu_button, "setColorFilter", buttonText)
+                views.setInt(R.id.setup_button, "setBackgroundColor", buttonBackground)
+                views.setInt(R.id.refresh_button, "setBackgroundColor", buttonBackground)
+                views.setInt(R.id.setup_button, "setColorFilter", buttonText)
+                views.setInt(R.id.refresh_button, "setColorFilter", buttonText)
             }
             views.setTextColor(R.id.add_button, buttonText)
             views.setInt(R.id.counter_widget_root, "setBackgroundColor", CounterRepository.backgroundColor(context))
             views.setTextColor(R.id.error_message, CounterRepository.overdueColor(context))
             views.setTextColor(R.id.empty_message, CounterRepository.textColor(context))
+            views.setTextColor(
+                R.id.refresh_success_message,
+                CounterRepository.positiveProgressColor(context),
+            )
+            views.setViewVisibility(
+                R.id.refresh_success_message,
+                if (SystemClock.elapsedRealtime() < refreshSuccessUntil) {
+                    android.view.View.VISIBLE
+                } else {
+                    android.view.View.GONE
+                },
+            )
 
             val serviceIntent = Intent(context, CounterRemoteViewsService::class.java)
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
