@@ -10,10 +10,10 @@
     <string name="add">+ Add</string>
     <string name="add_counter">Add counter</string>
     <string name="refresh">Refresh counters</string>
-    <string name="settings_icon">⚙</string>
+    <string name="toolbar_menu">Widget options</string>
+    <string name="setup">Setup</string>
     <string name="no_counters">No counters yet. Add one or refresh.</string>
     <string name="more_icon">⋮</string>
-    <string name="counter_actions">Counter actions</string>
     <string name="reset">Reset</string>
     <string name="reset_counter">Reset counter?</string>
     <string name="reset_confirmation">Reset %1$s to today plus its period?</string>

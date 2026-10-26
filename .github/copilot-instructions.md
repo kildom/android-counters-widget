@@ -4,18 +4,18 @@
 - This is a native Android app written in Kotlin. Its primary feature is a home-screen widget.
 - Keep changes beginner-friendly and focused; explain Android-specific concepts when useful.
 - Preserve the widget's support for home-screen placement and follow Android App Widget conventions.
-- Widget shows counters that counts down to some event.
-- The counters information is taken from internet over HTTP using user-provided secret URL that returns JSON.
+- The widget shows counters counting down to events.
+- Counter information comes from a user-configured private HTTP or HTTPS URL returning JSON. HTTPS is recommended; HTTP is enabled for development, so do not claim that HTTP protects the secret URL.
 - The widget should have optimized power consumption.
-  - It never executes any code when not needed, especially if phone is locked or widget is not visible.
-  - The counters information is fetched not often than once per minute and only if widget is visible.
-  - If widget is not visible, it should not fetch any information from internet.
-  - If widget becomes visible, it should fetch the information immediately if not fetched in the last minute.
+  - Android does not provide a reliable widget visibility callback. Do not add background polling or fetch while the widget may be hidden.
+  - Fetch counter lists only on explicit refresh, at most once per minute. Add/edit/delete commands are sent immediately after the user requests them.
 - Widget should have as low as possible memory footprint and CPU usage.
+- Keep widget rendering resilient to network and server errors; show a useful message while retaining the widget UI.
 
 ## Build and Validation
 - The Android SDK and JDK are provided by Docker; do not require them to be installed on the host.
 - Build from the project root with `./gradlew assembleDebug` inside the Dev Container, or use the Docker Compose workflow in [README.md](../README.md).
+- Build the unsigned release APK with `./gradlew assembleRelease`; it is output at `app/build/outputs/apk/release/app-release-unsigned.apk`.
 - Run the build after changes that affect app code, resources, or Gradle configuration.
 
 ## Project Structure
@@ -53,7 +53,8 @@
   }
   ```
 - If app receives an error response, it should display the error message to the user.
-- Over HTTP, the app can send a POST requests (commands) using the same URL and the response is the same as above.
+- GET requests fetch counters. POST requests send commands to the same URL and return the same response structure.
+- Treat the endpoint URL as a secret access key; do not log it or include it in error messages.
 - The response will have `command` field set to the command sent. The app should check if command in the response matches the command sent. If not, it should display an error message to the user.
 - The commands are:
   - Edit command - edit the counter. If some fields are not provided, they should not be changed.
@@ -88,20 +89,24 @@
 ## Widget Behavior
 - The widget should display a toolbar at the top and a scrollable list of counters below it.
 - The toolbar should have:
-  - Add button with "+" icon and "Add" label, which opens a dialog to add a new counter. It contains a Name field and a Period field. The initial target date will be set to current date + period.
-  - Refresh button with "⟳" icon no label, which fetches the counters information from the user-provided URL.
+  - A compact Add button, which opens a dialog to add a counter with Name and Period fields. The backend sets the initial target date to current date + period.
+  - A compact three-dot options button with Refresh and Setup menu items. Refresh fetches counters; Setup opens the configuration UI.
+- Setup allows editing the endpoint URL and widget background, normal text, and overdue text colors. Use the in-app RGB color picker and retain saved colors. Toolbar button backgrounds use the configured text color and black/white foreground chosen for contrast.
+- Widget-triggered dialogs and configuration should appear over the home screen and close cleanly when dismissed or when navigating between widget actions.
 - Each counter in the list should display:
   - The counter's name.
-  - The percentage of time left until the target date, calculated as `(targetDate - currentDate) / period`.
-    If percentage is less than 0 it should be displayed as red with minimum sign.
-  - The days remaining until the target date using smaller font size and inside brackets.
-  - Three dots that shows a menu with:
-    - Reset button that executes an edit command with target date set to current date + period.
+  - The percentage of time left until the target date, calculated as `((targetDate - currentDate) / period) * 100` and displayed with a percent sign.
+    If percentage is less than 0, use the configurable overdue text color and retain the negative sign.
+  - Days remaining and period in smaller text, formatted as `(remaining days of period days)`, for example `(20 of 31 days)`.
+  - Tapping anywhere on the counter row opens its action menu; do not add a separate per-row three-dot button.
+  - The action menu contains:
+    - Reset button that asks for confirmation, then executes an edit command with target date set to current date + period.
     - Edit button that opens a dialog to edit the counter's name and period.
     - Postpone button that show a prompt with a number of days to postpone the target date with default value of 1. If user enters a number, it executes an edit command with target date set to current "targetDate + number of days".
     - Speed up button that works the same as postpone button but with negative number of days.
     - Delete button that executes a delete command. User should be prompted to confirm the deletion.
 - The list is sorted by percentage starting from the lowest percentage at the top.
+- Keep toolbar dimensions compact and align icons visually within their buttons; verify changes in remote-view layouts.
 
 ## Web backend
 - The web backend is a single PHP script that handles JSON commands and returns JSON responses as described above.

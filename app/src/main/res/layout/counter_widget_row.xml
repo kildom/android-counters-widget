@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/counter_row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
@@ -44,13 +45,4 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/counter_menu_button"
-        android:layout_width="40dp"
-        android:layout_height="48dp"
-        android:contentDescription="@string/counter_actions"
-        android:gravity="center"
-        android:text="@string/more_icon"
-        android:textColor="@android:color/white"
-        android:textSize="24sp" />
 </LinearLayout>

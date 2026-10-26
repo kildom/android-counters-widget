@@ -44,7 +44,6 @@ private class CounterViewsFactory(
         )
         row.setTextColor(R.id.counter_name, CounterRepository.textColor(context))
         row.setTextColor(R.id.counter_days, CounterRepository.textColor(context))
-        row.setTextColor(R.id.counter_menu_button, CounterRepository.textColor(context))
         val days = counter.daysRemaining()
         row.setTextViewText(
             R.id.counter_days,
@@ -56,7 +55,7 @@ private class CounterViewsFactory(
             .putExtra(CounterActionActivity.EXTRA_COUNTER_NAME, counter.name)
             .putExtra(CounterActionActivity.EXTRA_COUNTER_PERIOD, counter.period)
             .putExtra(CounterActionActivity.EXTRA_COUNTER_TARGET, counter.targetDate)
-        row.setOnClickFillInIntent(R.id.counter_menu_button, fillInIntent)
+        row.setOnClickFillInIntent(R.id.counter_row, fillInIntent)
         return row
     }
 

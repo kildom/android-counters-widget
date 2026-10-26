@@ -21,8 +21,32 @@ class CounterActionActivity : Activity() {
         super.onCreate(savedInstanceState)
         when (intent.getStringExtra(EXTRA_ACTION)) {
             ACTION_ADD -> showEditDialog(null)
+            ACTION_WIDGET_OPTIONS -> showWidgetOptions()
             else -> showCounterMenu()
         }
+    }
+
+    private fun showWidgetOptions() {
+        val items = arrayOf(getString(R.string.refresh), getString(R.string.setup))
+        AlertDialog.Builder(this)
+            .setItems(items) { _, selected ->
+                when (selected) {
+                    0 -> CounterRepository.refreshIfStale(this) {
+                        CounterWidgetProvider.updateAllWidgets(this)
+                        finish()
+                    }
+                    1 -> {
+                        startActivity(
+                            android.content.Intent(this, SettingsActivity::class.java)
+                                .putExtra(SettingsActivity.EXTRA_OPENED_FROM_WIDGET, true),
+                        )
+                        finish()
+                    }
+                    else -> finish()
+                }
+            }
+            .setOnCancelListener { finish() }
+            .show()
     }
 
     private fun showCounterMenu() {
@@ -218,5 +242,6 @@ class CounterActionActivity : Activity() {
         const val EXTRA_COUNTER_PERIOD = "counter_period"
         const val EXTRA_COUNTER_TARGET = "counter_target"
         const val ACTION_ADD = "add"
+        const val ACTION_WIDGET_OPTIONS = "widget_options"
     }
 }

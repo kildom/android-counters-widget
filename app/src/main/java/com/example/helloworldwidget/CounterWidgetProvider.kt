@@ -58,63 +58,46 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 ),
             )
 
-            val settingsIntent = Intent(context, SettingsActivity::class.java)
-                .putExtra(SettingsActivity.EXTRA_OPENED_FROM_WIDGET, true)
+            val optionsIntent = Intent(context, CounterActionActivity::class.java)
+                .putExtra(CounterActionActivity.EXTRA_ACTION, CounterActionActivity.ACTION_WIDGET_OPTIONS)
             views.setOnClickPendingIntent(
-                R.id.settings_button,
+                R.id.toolbar_menu_button,
                 PendingIntent.getActivity(
                     context,
-                    widgetId * 10 + 4,
-                    settingsIntent,
+                    widgetId * 10 + 2,
+                    optionsIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
             )
 
-            val refreshIntent = Intent(context, CounterWidgetProvider::class.java)
-                .setAction(ACTION_REFRESH)
-            views.setOnClickPendingIntent(
-                R.id.refresh_button,
-                PendingIntent.getBroadcast(
-                    context,
-                    widgetId * 10 + 2,
-                    refreshIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
             val buttonBackground = CounterRepository.textColor(context)
             val buttonText = if (hasLightTextContrast(buttonBackground)) {
                 android.graphics.Color.WHITE
             } else {
                 android.graphics.Color.BLACK
             }
-            listOf(R.id.add_button, R.id.settings_button).forEach { buttonId ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    views.setColorStateList(
-                        buttonId,
-                        "setBackgroundTintList",
-                        ColorStateList.valueOf(buttonBackground),
-                    )
-                } else {
-                    views.setInt(buttonId, "setBackgroundColor", buttonBackground)
-                }
-                views.setTextColor(buttonId, buttonText)
-            }
-            views.setTextViewTextSize(R.id.settings_button, android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 views.setColorStateList(
-                    R.id.refresh_button,
+                    R.id.add_button,
                     "setBackgroundTintList",
                     ColorStateList.valueOf(buttonBackground),
                 )
                 views.setColorStateList(
-                    R.id.refresh_button,
+                    R.id.toolbar_menu_button,
+                    "setBackgroundTintList",
+                    ColorStateList.valueOf(buttonBackground),
+                )
+                views.setColorStateList(
+                    R.id.toolbar_menu_button,
                     "setImageTintList",
                     ColorStateList.valueOf(buttonText),
                 )
             } else {
-                views.setInt(R.id.refresh_button, "setBackgroundColor", buttonBackground)
-                views.setInt(R.id.refresh_button, "setColorFilter", buttonText)
+                views.setInt(R.id.add_button, "setBackgroundColor", buttonBackground)
+                views.setInt(R.id.toolbar_menu_button, "setBackgroundColor", buttonBackground)
+                views.setInt(R.id.toolbar_menu_button, "setColorFilter", buttonText)
             }
+            views.setTextColor(R.id.add_button, buttonText)
             views.setInt(R.id.counter_widget_root, "setBackgroundColor", CounterRepository.backgroundColor(context))
             views.setTextColor(R.id.error_message, CounterRepository.overdueColor(context))
             views.setTextColor(R.id.empty_message, CounterRepository.textColor(context))
@@ -139,8 +122,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val error = CounterRepository.lastError(context)
             if (error.isNullOrBlank()) {
                 views.setTextViewText(R.id.error_message, "")
+                views.setViewVisibility(R.id.error_message, android.view.View.GONE)
             } else {
                 views.setTextViewText(R.id.error_message, error)
+                views.setViewVisibility(R.id.error_message, android.view.View.VISIBLE)
             }
 
             manager.updateAppWidget(widgetId, views)

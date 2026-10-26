@@ -9,16 +9,21 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="26dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/add_button"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="26dp"
             android:contentDescription="@string/add_counter"
             android:minWidth="64dp"
+            android:minHeight="0dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
             android:background="@drawable/toolbar_button_background"
             android:text="@string/add" />
 
@@ -27,27 +32,17 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/settings_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:contentDescription="@string/settings_title"
-            android:minWidth="48dp"
-            android:background="@drawable/toolbar_button_background"
-            android:text="@string/settings_icon" />
-
-        <ImageButton
-            android:id="@+id/refresh_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+        <ImageView
+            android:id="@+id/toolbar_menu_button"
+            android:layout_width="36dp"
+            android:layout_height="26dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/toolbar_button_background"
-            android:contentDescription="@string/refresh"
-            android:padding="4dp"
-            android:minWidth="48dp"
+            android:contentDescription="@string/toolbar_menu"
+            android:gravity="center"
+            android:paddingBottom="3dp"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_refresh" />
+            android:src="@drawable/ic_more_vertical" />
     </LinearLayout>
 
     <TextView
