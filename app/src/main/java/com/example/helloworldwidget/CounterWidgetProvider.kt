@@ -87,7 +87,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             } else {
                 android.graphics.Color.BLACK
             }
-            listOf(R.id.add_button, R.id.settings_button, R.id.refresh_button).forEach { buttonId ->
+            listOf(R.id.add_button, R.id.settings_button).forEach { buttonId ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     views.setColorStateList(
                         buttonId,
@@ -100,7 +100,21 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 views.setTextColor(buttonId, buttonText)
             }
             views.setTextViewTextSize(R.id.settings_button, android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
-            views.setTextViewTextSize(R.id.refresh_button, android.util.TypedValue.COMPLEX_UNIT_SP, 28f)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                views.setColorStateList(
+                    R.id.refresh_button,
+                    "setBackgroundTintList",
+                    ColorStateList.valueOf(buttonBackground),
+                )
+                views.setColorStateList(
+                    R.id.refresh_button,
+                    "setImageTintList",
+                    ColorStateList.valueOf(buttonText),
+                )
+            } else {
+                views.setInt(R.id.refresh_button, "setBackgroundColor", buttonBackground)
+                views.setInt(R.id.refresh_button, "setColorFilter", buttonText)
+            }
             views.setInt(R.id.counter_widget_root, "setBackgroundColor", CounterRepository.backgroundColor(context))
             views.setTextColor(R.id.error_message, CounterRepository.overdueColor(context))
             views.setTextColor(R.id.empty_message, CounterRepository.textColor(context))

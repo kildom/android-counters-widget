@@ -10,7 +10,6 @@
     <string name="add">+ Add</string>
     <string name="add_counter">Add counter</string>
     <string name="refresh">Refresh counters</string>
-    <string name="refresh_icon">⟳</string>
     <string name="settings_icon">⚙</string>
     <string name="no_counters">No counters yet. Add one or refresh.</string>
     <string name="more_icon">⋮</string>
