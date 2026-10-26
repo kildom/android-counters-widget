@@ -1,9 +1,15 @@
 package com.example.helloworldwidget
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
+import android.os.Build
 import android.os.Handler
+import android.os.PowerManager
 import android.os.Looper
+import android.app.KeyguardManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -11,9 +17,14 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 object CounterRepository {
+    class RequestCancelledException : IOException("Request stopped because the screen turned off or the device was locked.")
+
     private class RequestFailure(
         message: String,
         val retryable: Boolean,
@@ -37,6 +48,74 @@ object CounterRepository {
     private const val RETRY_DELAY_MS = 3_000L
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private class RequestSession(private val context: Context) : AutoCloseable {
+        private val stopped = AtomicBoolean(false)
+        private val retrySignal = CountDownLatch(1)
+        @Volatile
+        private var activeConnection: HttpURLConnection? = null
+        private var receiverRegistered = false
+
+        private val screenOffReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                cancel()
+            }
+        }
+
+        init {
+            val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(screenOffReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                context.registerReceiver(screenOffReceiver, filter)
+            }
+            receiverRegistered = true
+        }
+
+        fun ensureActive() {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            if (!powerManager.isInteractive || keyguardManager.isKeyguardLocked) {
+                cancel()
+            }
+            if (stopped.get()) throw RequestCancelledException()
+        }
+
+        fun attach(connection: HttpURLConnection) {
+            activeConnection = connection
+            if (stopped.get()) {
+                connection.disconnect()
+                throw RequestCancelledException()
+            }
+        }
+
+        fun detach(connection: HttpURLConnection) {
+            if (activeConnection === connection) activeConnection = null
+        }
+
+        fun waitBeforeRetry() {
+            ensureActive()
+            retrySignal.await(RETRY_DELAY_MS, TimeUnit.MILLISECONDS)
+            ensureActive()
+        }
+
+        private fun cancel() {
+            if (stopped.compareAndSet(false, true)) {
+                activeConnection?.disconnect()
+                retrySignal.countDown()
+            }
+        }
+
+        override fun close() {
+            if (receiverRegistered) {
+                context.unregisterReceiver(screenOffReceiver)
+                receiverRegistered = false
+            }
+            activeConnection?.disconnect()
+            activeConnection = null
+        }
+    }
 
     fun endpoint(context: Context): String =
         preferences(context).getString(KEY_ENDPOINT, "").orEmpty()
@@ -122,17 +201,25 @@ object CounterRepository {
         val appContext = context.applicationContext
         executor.execute {
             val prefs = preferences(appContext)
-            val lastAttempt = prefs.getLong(KEY_LAST_ATTEMPT, 0L)
-            if (force || System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
-                prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
-                try {
-                    val response = requestWithRetries(appContext, JSONObject().put("command", "get"))
-                    saveResponse(appContext, response, "get")
-                } catch (exception: Exception) {
-                    saveError(appContext, exception.message ?: "Could not refresh counters.")
+            try {
+                if (!deviceCanRunRequests(appContext)) return@execute
+                val lastAttempt = prefs.getLong(KEY_LAST_ATTEMPT, 0L)
+                if (force || System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
+                    prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
+                    try {
+                        val response = requestWithRetries(appContext, JSONObject().put("command", "get"))
+                        saveResponse(appContext, response, "get")
+                    } catch (cancelled: RequestCancelledException) {
+                        return@execute
+                    } catch (exception: Exception) {
+                        saveError(appContext, exception.message ?: "Could not refresh counters.")
+                    }
                 }
+                onComplete?.let { mainHandler.post(it) }
+            } catch (exception: Exception) {
+                saveError(appContext, exception.message ?: "Could not refresh counters.")
+                onComplete?.let { mainHandler.post(it) }
             }
-            onComplete?.let { mainHandler.post(it) }
         }
     }
 
@@ -149,41 +236,44 @@ object CounterRepository {
                 saveResponse(appContext, response, name)
                 response
             }.onFailure { exception ->
-                saveError(appContext, exception.message ?: "The request failed.")
+                if (exception !is RequestCancelledException) {
+                    saveError(appContext, exception.message ?: "The request failed.")
+                }
             }
             mainHandler.post { onComplete(result) }
         }
     }
 
     private fun requestWithRetries(context: Context, payload: JSONObject): JSONObject {
-        var lastFailure: RequestFailure? = null
-        repeat(MAX_REQUEST_ATTEMPTS) { attempt ->
-            try {
-                return request(context, payload)
-            } catch (failure: RequestFailure) {
-                if (!failure.retryable) throw failure
-                lastFailure = failure
-                if (attempt < MAX_REQUEST_ATTEMPTS - 1) {
-                    try {
-                        Thread.sleep(RETRY_DELAY_MS)
-                    } catch (interrupted: InterruptedException) {
-                        Thread.currentThread().interrupt()
-                        throw RequestFailure("The request was interrupted.", false, interrupted)
+        RequestSession(context).use { session ->
+            var lastFailure: RequestFailure? = null
+            repeat(MAX_REQUEST_ATTEMPTS) { attempt ->
+                session.ensureActive()
+                try {
+                    return request(context, payload, session)
+                } catch (cancelled: RequestCancelledException) {
+                    throw cancelled
+                } catch (failure: RequestFailure) {
+                    if (!failure.retryable) throw failure
+                    lastFailure = failure
+                    if (attempt < MAX_REQUEST_ATTEMPTS - 1) {
+                        session.waitBeforeRetry()
                     }
                 }
             }
-        }
 
-        val finalFailure = lastFailure
-            ?: RequestFailure("The request failed without an error response.", false)
-        throw RequestFailure(
-            "Request failed after $MAX_REQUEST_ATTEMPTS attempts: ${finalFailure.message}",
-            false,
-            finalFailure,
-        )
+            val finalFailure = lastFailure
+                ?: RequestFailure("The request failed without an error response.", false)
+            throw RequestFailure(
+                "Request failed after $MAX_REQUEST_ATTEMPTS attempts: ${finalFailure.message}",
+                false,
+                finalFailure,
+            )
+        }
     }
 
-    private fun request(context: Context, payload: JSONObject): JSONObject {
+    private fun request(context: Context, payload: JSONObject, session: RequestSession): JSONObject {
+        session.ensureActive()
         val endpoint = endpoint(context)
         if (endpoint.isBlank()) {
             throw RequestFailure("Set the backend URL in the app before using the widget.", false)
@@ -205,6 +295,7 @@ object CounterRepository {
         }
 
         try {
+            session.attach(connection)
             if (!isGet) {
                 connection.outputStream.use { output ->
                     output.write(payload.toString().toByteArray(StandardCharsets.UTF_8))
@@ -264,7 +355,10 @@ object CounterRepository {
                     false,
                 )
             }
+            session.ensureActive()
             return response
+        } catch (cancelled: RequestCancelledException) {
+            throw cancelled
         } catch (failure: RequestFailure) {
             throw failure
         } catch (exception: IOException) {
@@ -272,8 +366,15 @@ object CounterRepository {
         } catch (exception: Exception) {
             throw RequestFailure(exception.message ?: "The request failed.", false, exception)
         } finally {
+            session.detach(connection)
             connection.disconnect()
         }
+    }
+
+    private fun deviceCanRunRequests(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        return powerManager.isInteractive && !keyguardManager.isKeyguardLocked
     }
 
     private fun parseResponse(bytes: ByteArray, successStatus: Boolean): JSONObject {
