@@ -45,7 +45,7 @@
         <ImageView
             android:id="@+id/counter_progress_bar"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
+            android:layout_height="14dp"
             android:layout_gravity="center_vertical"
             android:contentDescription="@null"
             android:scaleType="fitXY" />

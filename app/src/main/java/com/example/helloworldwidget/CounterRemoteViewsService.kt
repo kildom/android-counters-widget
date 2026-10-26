@@ -96,7 +96,7 @@ private class CounterViewsFactory(
 
     private fun progressBitmap(percent: Double, progressColor: Int, backgroundColor: Int): Bitmap {
         val width = 512
-        val height = 20
+        val height = 14
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
