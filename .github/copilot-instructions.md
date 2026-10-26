@@ -8,7 +8,7 @@
 - Counter information comes from a user-configured private HTTP or HTTPS URL returning JSON. HTTPS is recommended; HTTP is enabled for development, so do not claim that HTTP protects the secret URL.
 - The widget should have optimized power consumption.
   - Android does not provide a reliable widget visibility callback. Do not add background polling or fetch while the widget may be hidden.
-  - Fetch counter lists only on explicit refresh, at most once per minute. Add/edit/delete commands are sent immediately after the user requests them.
+  - Do not poll in the background. Automatic/stale refreshes are limited to once per minute, but the user's explicit Refresh action bypasses that throttle and starts a request immediately. Add/edit/delete commands are sent immediately after the user requests them.
 - Widget should have as low as possible memory footprint and CPU usage.
 - Keep widget rendering resilient to network and server errors; show a useful message while retaining the widget UI.
 

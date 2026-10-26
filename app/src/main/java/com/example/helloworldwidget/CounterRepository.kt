@@ -111,11 +111,19 @@ object CounterRepository {
     }
 
     fun refreshIfStale(context: Context, onComplete: (() -> Unit)? = null) {
+        refresh(context, force = false, onComplete = onComplete)
+    }
+
+    fun refreshNow(context: Context, onComplete: (() -> Unit)? = null) {
+        refresh(context, force = true, onComplete = onComplete)
+    }
+
+    private fun refresh(context: Context, force: Boolean, onComplete: (() -> Unit)?) {
         val appContext = context.applicationContext
         executor.execute {
             val prefs = preferences(appContext)
             val lastAttempt = prefs.getLong(KEY_LAST_ATTEMPT, 0L)
-            if (System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
+            if (force || System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
                 prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
                 try {
                     val response = requestWithRetries(appContext, JSONObject().put("command", "get"))

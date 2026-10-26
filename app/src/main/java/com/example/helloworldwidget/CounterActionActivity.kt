@@ -31,7 +31,7 @@ class CounterActionActivity : Activity() {
         AlertDialog.Builder(this)
             .setItems(items) { _, selected ->
                 when (selected) {
-                    0 -> CounterRepository.refreshIfStale(this) {
+                    0 -> CounterRepository.refreshNow(this) {
                         CounterWidgetProvider.updateAllWidgets(this)
                         finish()
                     }
