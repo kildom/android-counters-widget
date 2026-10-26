@@ -19,13 +19,29 @@ A native Kotlin app with a resizable home-screen widget that displays countdown 
 
    The APK is created at `app/build/outputs/apk/debug/app-debug.apk`.
 
-To build without opening the Dev Container, generate the Gradle wrapper once and build:
+To build an unsigned release APK in the Dev Container, run:
+
+```sh
+./gradlew assembleRelease
+```
+
+The APK is created at `app/build/outputs/apk/release/app-release-unsigned.apk`.
+
+To build without opening the Dev Container, generate the Gradle wrapper once and build either variant:
 
 ```sh
 docker compose build
 docker compose run --rm android gradle wrapper --gradle-version 8.11.1
 docker compose run --rm android ./gradlew assembleDebug
 ```
+
+For an unsigned release APK, replace the last command with:
+
+```sh
+docker compose run --rm android ./gradlew assembleRelease
+```
+
+The release APK is created at `app/build/outputs/apk/release/app-release-unsigned.apk`.
 
 ## Install on a phone
 
