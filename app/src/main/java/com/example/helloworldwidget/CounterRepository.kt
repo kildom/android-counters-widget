@@ -43,6 +43,8 @@ object CounterRepository {
     private const val KEY_NEGATIVE_PROGRESS_COLOR = "negative_progress_color"
     private const val KEY_PROGRESS_BACKGROUND_COLOR = "progress_background_color"
     private const val KEY_PROGRESS_TEXT_COLOR = "progress_text_color"
+    private const val KEY_POSITIVE_PROGRESS_TEXT_COLOR = "positive_progress_text_color"
+    private const val KEY_NEGATIVE_PROGRESS_TEXT_COLOR = "negative_progress_text_color"
     private const val KEY_BUTTON_BACKGROUND_COLOR = "button_background_color"
     private const val DEFAULT_BACKGROUND_COLOR = 0xFF6750A4.toInt()
     private const val DEFAULT_TEXT_COLOR = Color.WHITE
@@ -51,6 +53,8 @@ object CounterRepository {
     private const val DEFAULT_NEGATIVE_PROGRESS_COLOR = 0xFFF44336.toInt()
     private const val DEFAULT_PROGRESS_BACKGROUND_COLOR = 0xFFC0C0C0.toInt()
     private const val DEFAULT_PROGRESS_TEXT_COLOR = Color.BLACK
+    private const val DEFAULT_POSITIVE_PROGRESS_TEXT_COLOR = Color.BLACK
+    private const val DEFAULT_NEGATIVE_PROGRESS_TEXT_COLOR = Color.BLACK
     private const val DEFAULT_BUTTON_BACKGROUND_COLOR = 0xFF808080.toInt()
     private const val MIN_FETCH_INTERVAL_MS = 60_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
@@ -151,6 +155,12 @@ object CounterRepository {
     fun progressTextColor(context: Context): Int =
         preferences(context).getInt(KEY_PROGRESS_TEXT_COLOR, DEFAULT_PROGRESS_TEXT_COLOR)
 
+    fun positiveProgressTextColor(context: Context): Int =
+        preferences(context).getInt(KEY_POSITIVE_PROGRESS_TEXT_COLOR, DEFAULT_POSITIVE_PROGRESS_TEXT_COLOR)
+
+    fun negativeProgressTextColor(context: Context): Int =
+        preferences(context).getInt(KEY_NEGATIVE_PROGRESS_TEXT_COLOR, DEFAULT_NEGATIVE_PROGRESS_TEXT_COLOR)
+
     fun buttonBackgroundColor(context: Context): Int =
         preferences(context).getInt(KEY_BUTTON_BACKGROUND_COLOR, DEFAULT_BUTTON_BACKGROUND_COLOR)
 
@@ -163,6 +173,8 @@ object CounterRepository {
         negativeProgress: Int,
         progressBackground: Int,
         progressText: Int,
+        positiveProgressText: Int,
+        negativeProgressText: Int,
         buttonBackground: Int,
     ) {
         preferences(context).edit()
@@ -173,6 +185,8 @@ object CounterRepository {
             .putInt(KEY_NEGATIVE_PROGRESS_COLOR, negativeProgress)
             .putInt(KEY_PROGRESS_BACKGROUND_COLOR, progressBackground)
             .putInt(KEY_PROGRESS_TEXT_COLOR, progressText)
+            .putInt(KEY_POSITIVE_PROGRESS_TEXT_COLOR, positiveProgressText)
+            .putInt(KEY_NEGATIVE_PROGRESS_TEXT_COLOR, negativeProgressText)
             .putInt(KEY_BUTTON_BACKGROUND_COLOR, buttonBackground)
             .apply()
     }

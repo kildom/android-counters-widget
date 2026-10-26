@@ -27,6 +27,8 @@ class ColorSettingsActivity : Activity() {
     private var negativeProgress = 0
     private var progressBackground = 0
     private var progressText = 0
+    private var positiveProgressText = 0
+    private var negativeProgressText = 0
     private var buttonBackground = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +40,8 @@ class ColorSettingsActivity : Activity() {
         negativeProgress = CounterRepository.negativeProgressColor(this)
         progressBackground = CounterRepository.progressBackgroundColor(this)
         progressText = CounterRepository.progressTextColor(this)
+        positiveProgressText = CounterRepository.positiveProgressTextColor(this)
+        negativeProgressText = CounterRepository.negativeProgressTextColor(this)
         buttonBackground = CounterRepository.buttonBackgroundColor(this)
 
         options = listOf(
@@ -47,7 +51,9 @@ class ColorSettingsActivity : Activity() {
             ColorOption(R.string.positive_progress_color, { positiveProgress }) { positiveProgress = it },
             ColorOption(R.string.negative_progress_color, { negativeProgress }) { negativeProgress = it },
             ColorOption(R.string.progress_background_color, { progressBackground }) { progressBackground = it },
-            ColorOption(R.string.progress_text_color, { progressText }) { progressText = it },
+            ColorOption(R.string.progress_track_text_color, { progressText }) { progressText = it },
+            ColorOption(R.string.positive_progress_text_color, { positiveProgressText }) { positiveProgressText = it },
+            ColorOption(R.string.negative_progress_text_color, { negativeProgressText }) { negativeProgressText = it },
             ColorOption(R.string.button_background_color, { buttonBackground }) { buttonBackground = it },
         )
 
@@ -86,6 +92,8 @@ class ColorSettingsActivity : Activity() {
                     negativeProgress,
                     progressBackground,
                     progressText,
+                    positiveProgressText,
+                    negativeProgressText,
                     buttonBackground,
                 )
                 CounterWidgetProvider.updateAllWidgets(this@ColorSettingsActivity)

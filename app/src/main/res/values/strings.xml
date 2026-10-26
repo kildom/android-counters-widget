@@ -40,7 +40,9 @@
     <string name="positive_progress_color">Positive progress bar</string>
     <string name="negative_progress_color">Negative progress bar</string>
     <string name="progress_background_color">Progress bar background</string>
-    <string name="progress_text_color">Progress bar day text</string>
+    <string name="progress_track_text_color">Text on progress bar background (right aligned)</string>
+    <string name="positive_progress_text_color">Text on positive progress bar</string>
+    <string name="negative_progress_text_color">Text on negative progress bar</string>
     <string name="button_background_color">Buttons background</string>
     <string name="save_colors">Save colors</string>
     <string name="choose_color">Choose color</string>

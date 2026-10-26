@@ -54,7 +54,13 @@ private class CounterViewsFactory(
             R.id.counter_days,
             context.getString(R.string.remaining_days_of_period, days, counter.period),
         )
-        row.setTextColor(R.id.counter_days, CounterRepository.progressTextColor(context))
+        val progressTextColor = if (abs(percent) > 50.0) {
+            if (percent < 0) CounterRepository.negativeProgressTextColor(context)
+            else CounterRepository.positiveProgressTextColor(context)
+        } else {
+            CounterRepository.progressTextColor(context)
+        }
+        row.setTextColor(R.id.counter_days, progressTextColor)
         row.setInt(
             R.id.counter_days,
             "setGravity",
@@ -90,7 +96,7 @@ private class CounterViewsFactory(
 
     private fun progressBitmap(percent: Double, progressColor: Int, backgroundColor: Int): Bitmap {
         val width = 512
-        val height = 4
+        val height = 20
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
