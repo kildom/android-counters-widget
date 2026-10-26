@@ -213,6 +213,7 @@
   }
 
   async function initFrontend(uid) {
+    document.querySelector("#home-link").href = `index.html#${encodeURIComponent(uid)}`;
     const body = document.querySelector("#counter-rows");
     const refresh = async () => {
       setStatus("Loading counters…");
