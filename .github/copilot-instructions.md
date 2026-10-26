@@ -55,6 +55,7 @@
 - If app receives an error response, it should display the error message to the user.
 - GET requests fetch counters. POST requests send commands to the same URL and return the same response structure.
 - Treat the endpoint URL as a secret access key; do not log it or include it in error messages.
+- Retry transient network failures and HTTP error responses up to five total attempts, waiting a few seconds between attempts. Do not retry valid JSON error responses from the backend or protocol/validation errors; show the final failure to the user.
 - The response will have `command` field set to the command sent. The app should check if command in the response matches the command sent. If not, it should display an error message to the user.
 - The commands are:
   - Edit command - edit the counter. If some fields are not provided, they should not be changed.

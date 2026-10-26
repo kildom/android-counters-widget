@@ -14,6 +14,12 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.Executors
 
 object CounterRepository {
+    private class RequestFailure(
+        message: String,
+        val retryable: Boolean,
+        cause: Throwable? = null,
+    ) : IOException(message, cause)
+
     private const val PREFS = "counter_widget"
     private const val KEY_ENDPOINT = "endpoint"
     private const val KEY_COUNTERS = "counters"
@@ -27,6 +33,8 @@ object CounterRepository {
     private const val DEFAULT_OVERDUE_COLOR = 0xFFFF6B6B.toInt()
     private const val MIN_FETCH_INTERVAL_MS = 60_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
+    private const val MAX_REQUEST_ATTEMPTS = 5
+    private const val RETRY_DELAY_MS = 3_000L
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -110,7 +118,7 @@ object CounterRepository {
             if (System.currentTimeMillis() - lastAttempt >= MIN_FETCH_INTERVAL_MS) {
                 prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
                 try {
-                    val response = request(appContext, JSONObject().put("command", "get"))
+                    val response = requestWithRetries(appContext, JSONObject().put("command", "get"))
                     saveResponse(appContext, response, "get")
                 } catch (exception: Exception) {
                     saveError(appContext, exception.message ?: "Could not refresh counters.")
@@ -129,7 +137,7 @@ object CounterRepository {
         executor.execute {
             val result = runCatching {
                 val name = command.optString("command")
-                val response = request(appContext, command)
+                val response = requestWithRetries(appContext, command)
                 saveResponse(appContext, response, name)
                 response
             }.onFailure { exception ->
@@ -139,21 +147,53 @@ object CounterRepository {
         }
     }
 
+    private fun requestWithRetries(context: Context, payload: JSONObject): JSONObject {
+        var lastFailure: RequestFailure? = null
+        repeat(MAX_REQUEST_ATTEMPTS) { attempt ->
+            try {
+                return request(context, payload)
+            } catch (failure: RequestFailure) {
+                if (!failure.retryable) throw failure
+                lastFailure = failure
+                if (attempt < MAX_REQUEST_ATTEMPTS - 1) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS)
+                    } catch (interrupted: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        throw RequestFailure("The request was interrupted.", false, interrupted)
+                    }
+                }
+            }
+        }
+
+        val finalFailure = lastFailure
+            ?: RequestFailure("The request failed without an error response.", false)
+        throw RequestFailure(
+            "Request failed after $MAX_REQUEST_ATTEMPTS attempts: ${finalFailure.message}",
+            false,
+            finalFailure,
+        )
+    }
+
     private fun request(context: Context, payload: JSONObject): JSONObject {
         val endpoint = endpoint(context)
         if (endpoint.isBlank()) {
-            throw IOException("Set the backend URL in the app before using the widget.")
+            throw RequestFailure("Set the backend URL in the app before using the widget.", false)
         }
 
         val isGet = payload.optString("command") == "get"
-        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
-            requestMethod = if (isGet) "GET" else "POST"
-            connectTimeout = 8_000
-            readTimeout = 8_000
-            instanceFollowRedirects = false
-            setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            setRequestProperty("Accept", "application/json")
-            if (!isGet) doOutput = true
+        val connection = try {
+            (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                requestMethod = if (isGet) "GET" else "POST"
+                connectTimeout = 8_000
+                readTimeout = 8_000
+                instanceFollowRedirects = false
+                setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                setRequestProperty("Accept", "application/json")
+                if (!isGet) doOutput = true
+            }
+        } catch (exception: Exception) {
+            throw RequestFailure("Could not connect to the server.", true, exception)
         }
 
         try {
@@ -163,40 +203,85 @@ object CounterRepository {
                 }
             }
             val statusCode = connection.responseCode
-            val stream = if (statusCode in 200..299) connection.inputStream else connection.errorStream
-                ?: throw IOException("The server returned HTTP $statusCode without a response.")
-            val bytes = stream.use { input ->
-                val output = ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                var total = 0
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    total += count
-                    if (total > MAX_RESPONSE_BYTES) {
-                        throw IOException("The server response is too large.")
+            val stream = if (statusCode in 200..299) {
+                connection.inputStream
+            } else {
+                connection.errorStream
+            }
+            val bytes = if (stream == null) {
+                ByteArray(0)
+            } else {
+                try {
+                    stream.use { input ->
+                        val output = ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        var total = 0
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            total += count
+                            if (total > MAX_RESPONSE_BYTES) {
+                                throw RequestFailure("The server response is too large.", false)
+                            }
+                            output.write(buffer, 0, count)
+                        }
+                        output.toByteArray()
                     }
-                    output.write(buffer, 0, count)
+                } catch (failure: RequestFailure) {
+                    throw failure
+                } catch (exception: IOException) {
+                    throw RequestFailure("Could not read the server response.", true, exception)
                 }
-                output.toByteArray()
             }
-            val response = try {
-                JSONObject(String(bytes, StandardCharsets.UTF_8))
-            } catch (exception: Exception) {
-                throw IOException("The server returned invalid JSON.", exception)
-            }
-            if (response.optString("command") != payload.optString("command")) {
-                throw IOException("The server response command did not match the request.")
-            }
-            if (response.optString("status") != "ok") {
-                throw IOException(response.optString("message").ifBlank { "The server returned an error." })
-            }
+            val response = if (bytes.isEmpty()) null else parseResponse(bytes, statusCode in 200..299)
             if (statusCode !in 200..299) {
-                throw IOException("The server returned HTTP $statusCode.")
+                if (response != null) {
+                    validateCommand(response, payload)
+                    if (response.optString("status") == "error") {
+                        throw RequestFailure(
+                            response.optString("message").ifBlank { "The server returned an error." },
+                            false,
+                        )
+                    }
+                }
+                throw RequestFailure("The server returned HTTP $statusCode.", true)
+            }
+            if (response == null) {
+                throw RequestFailure("The server returned an empty response.", false)
+            }
+            validateCommand(response, payload)
+            if (response.optString("status") != "ok") {
+                throw RequestFailure(
+                    response.optString("message").ifBlank { "The server returned an error." },
+                    false,
+                )
             }
             return response
+        } catch (failure: RequestFailure) {
+            throw failure
+        } catch (exception: IOException) {
+            throw RequestFailure("Network request failed.", true, exception)
+        } catch (exception: Exception) {
+            throw RequestFailure(exception.message ?: "The request failed.", false, exception)
         } finally {
             connection.disconnect()
+        }
+    }
+
+    private fun parseResponse(bytes: ByteArray, successStatus: Boolean): JSONObject {
+        try {
+            return JSONObject(String(bytes, StandardCharsets.UTF_8))
+        } catch (exception: Exception) {
+            if (!successStatus) {
+                throw RequestFailure("The server returned an HTTP error.", true, exception)
+            }
+            throw RequestFailure("The server returned invalid JSON.", false, exception)
+        }
+    }
+
+    private fun validateCommand(response: JSONObject, payload: JSONObject) {
+        if (response.optString("command") != payload.optString("command")) {
+            throw RequestFailure("The server response command did not match the request.", false)
         }
     }
 

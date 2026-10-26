@@ -42,6 +42,8 @@ Open **Event Counters** from the app list and enter the private HTTP or HTTPS UR
 
 Android's app-widget API does not provide a reliable callback when a widget becomes visible or hidden. To avoid network requests while the widget may be hidden, it does not poll in the background: use the refresh button to load counters, and refresh attempts are limited to one per minute. Add/edit/delete operations are sent immediately to the configured backend.
 
+Transient network failures and HTTP error responses are retried up to five times, with a three-second delay between attempts. Backend JSON errors and invalid responses are shown without retrying.
+
 ## Project layout
 
 - `app/src/main/java/.../CounterWidgetProvider.kt` updates widget instances and handles explicit refresh requests.
