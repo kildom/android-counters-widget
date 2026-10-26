@@ -35,6 +35,7 @@ object CounterRepository {
     private const val KEY_ENDPOINT = "endpoint"
     private const val KEY_COUNTERS = "counters"
     private const val KEY_LAST_ATTEMPT = "last_attempt"
+    private const val KEY_LAST_SUCCESSFUL_REFRESH = "last_successful_refresh"
     private const val KEY_ERROR = "error"
     private const val KEY_BACKGROUND_COLOR = "background_color"
     private const val KEY_TEXT_COLOR = "text_color"
@@ -57,6 +58,7 @@ object CounterRepository {
     private const val DEFAULT_NEGATIVE_PROGRESS_TEXT_COLOR = Color.BLACK
     private const val DEFAULT_BUTTON_BACKGROUND_COLOR = 0xFF808080.toInt()
     private const val MIN_FETCH_INTERVAL_MS = 60_000L
+    private const val UNLOCK_REFRESH_INTERVAL_MS = 120_000L
     private const val MAX_RESPONSE_BYTES = 1_048_576
     private const val MAX_REQUEST_ATTEMPTS = 5
     private const val RETRY_DELAY_MS = 3_000L
@@ -225,6 +227,7 @@ object CounterRepository {
                 .putString(KEY_ENDPOINT, endpoint)
                 .putString(KEY_COUNTERS, "[]")
                 .putLong(KEY_LAST_ATTEMPT, 0L)
+                .remove(KEY_LAST_SUCCESSFUL_REFRESH)
                 .remove(KEY_ERROR)
                 .apply()
         }
@@ -238,6 +241,27 @@ object CounterRepository {
 
     fun lastError(context: Context): String? =
         preferences(context).getString(KEY_ERROR, null)
+
+    fun isRefreshDueAfterUnlock(context: Context): Boolean =
+        endpoint(context).isNotBlank() &&
+            System.currentTimeMillis() -
+                preferences(context).getLong(KEY_LAST_SUCCESSFUL_REFRESH, 0L) >= UNLOCK_REFRESH_INTERVAL_MS
+
+    fun refreshAfterUnlock(context: Context): Boolean {
+        if (!deviceCanRunRequests(context) || !isRefreshDueAfterUnlock(context)) return false
+
+        val prefs = preferences(context)
+        prefs.edit().putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis()).apply()
+        try {
+            val response = requestWithRetries(context, JSONObject().put("command", "get"))
+            saveResponse(context, response, "get")
+        } catch (cancelled: RequestCancelledException) {
+            return false
+        } catch (exception: Exception) {
+            saveError(context, exception.message ?: "Could not refresh counters.")
+        }
+        return true
+    }
 
     fun reportError(context: Context, message: String) {
         saveError(context, message)
@@ -466,6 +490,7 @@ object CounterRepository {
             .putString(KEY_COUNTERS, parsed.toString())
             .remove(KEY_ERROR)
             .putLong(KEY_LAST_ATTEMPT, System.currentTimeMillis())
+            .putLong(KEY_LAST_SUCCESSFUL_REFRESH, System.currentTimeMillis())
             .apply()
     }
 

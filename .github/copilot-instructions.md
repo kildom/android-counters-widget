@@ -7,8 +7,9 @@
 - The widget shows counters counting down to events.
 - Counter information comes from a user-configured private HTTP or HTTPS URL returning JSON. HTTPS is recommended; HTTP is enabled for development, so do not claim that HTTP protects the secret URL.
 - The widget should have optimized power consumption.
-  - Android does not provide a reliable widget visibility callback. Do not add background polling or fetch while the widget may be hidden.
-  - Do not poll in the background. Automatic/stale refreshes are limited to once per minute, but the user's explicit Refresh action bypasses that throttle and starts a request immediately. Add/edit/delete commands are sent immediately after the user requests them.
+  - Android does not provide a reliable widget visibility callback. Do not add periodic background polling or fetch simply because the widget may be visible.
+  - On user unlock, schedule one WorkManager refresh about 20 seconds later only if the last successful server response was at least two minutes ago. Recheck cooldown and interactive/unlocked state when the work runs; skip while locked. System scheduling can defer the work.
+  - Automatic/stale refreshes are limited to once per minute, but the user's explicit Refresh action bypasses that throttle and starts a request immediately. Add/edit/delete commands are sent immediately after the user requests them.
   - Do not start or continue network requests while the display is off or the keyguard is locked. Cancel active requests and retry delays on screen-off; do not save a lock-cancellation as a server error.
 - Widget should have as low as possible memory footprint and CPU usage.
 - Keep widget rendering resilient to network and server errors; show a useful message while retaining the widget UI.
