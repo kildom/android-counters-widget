@@ -89,3 +89,8 @@ Run the HTTP integration test with:
 ```sh
 php web/tests/backend_test.php
 ```
+
+The browser manager is available at `http://localhost:8000/`. Enter a UID when
+prompted, or open the page with it in the URL fragment (for example,
+`http://localhost:8000/#YOUR_UID`). The landing page links to counter management,
+the Android APK, and a copyable backend URL for widget setup.

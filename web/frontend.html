@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Counters</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 1.5rem; color: CanvasText; background: Canvas; }
+    main { max-width: 70rem; margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    h1 { margin: .25rem 0; }
+    a { color: LinkText; }
+    #status { min-height: 1.5em; }
+    #status.error { color: #c62828; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .6rem; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); text-align: left; }
+    th { white-space: nowrap; }
+    input { box-sizing: border-box; width: 100%; min-width: 8rem; padding: .55rem; font: inherit; }
+    input[type="number"] { min-width: 6rem; }
+    input.dirty { background: #fff1bf; color: #222; outline: 2px solid #d99a00; }
+    button { padding: .55rem .8rem; font: inherit; cursor: pointer; }
+    .row-actions { display: flex; gap: .5rem; }
+    .delete { color: #b3261e; }
+    tr.add-row td { border-bottom: 0; }
+    @media (max-width: 650px) {
+      body { padding: .75rem; }
+      table, tbody, tr, td { display: block; width: auto; }
+      thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+      tbody tr { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem .75rem; padding: .75rem 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 18%, transparent); }
+      tbody td { border: 0; padding: .25rem 0; }
+      tbody td::before { content: attr(data-label); display: block; margin-bottom: .2rem; font-size: .8rem; opacity: .7; }
+      tbody td:first-child { grid-column: 1 / -1; }
+      tbody td:last-child { grid-column: 1 / -1; }
+      .row-actions { justify-content: flex-start; }
+      tr.add-row { border-top: 2px solid color-mix(in srgb, CanvasText 22%, transparent); }
+    }
+  </style>
+  <script src="frontend.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Manage Counters</h1>
+      <a href="index.html">Home</a>
+    </header>
+    <p id="status" role="status" aria-live="polite">Loading counters…</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Name</th><th scope="col">Period (days)</th><th scope="col">Days left</th><th scope="col">Actions</th></tr>
+        </thead>
+        <tbody id="counter-rows"></tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>
