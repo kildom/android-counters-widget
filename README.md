@@ -1,3 +1,8 @@
+> [!CAUTION]
+> This project is **fully AI generated without human review**.
+>
+> Use with caution and verify the code before running it in production.
+
 # Event Counters Android Widget
 
 A native Kotlin app with a resizable home-screen widget that displays countdown counters from a private HTTP or HTTPS endpoint. The Android SDK and build tools run in Docker; no host-side Android Studio or Java installation is needed.
