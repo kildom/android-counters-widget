@@ -64,8 +64,12 @@ private class CounterViewsFactory(
         row.setInt(
             R.id.counter_days,
             "setGravity",
-            if (abs(percent) > 50.0) Gravity.LEFT or Gravity.CENTER_VERTICAL
-            else Gravity.RIGHT or Gravity.CENTER_VERTICAL,
+            when {
+                abs(percent) > 50.0 && percent < 0 -> Gravity.RIGHT or Gravity.CENTER_VERTICAL
+                abs(percent) > 50.0 -> Gravity.LEFT or Gravity.CENTER_VERTICAL
+                percent < 0 -> Gravity.LEFT or Gravity.CENTER_VERTICAL
+                else -> Gravity.RIGHT or Gravity.CENTER_VERTICAL
+            },
         )
         row.setImageViewBitmap(
             R.id.counter_progress_bar,
@@ -106,7 +110,8 @@ private class CounterViewsFactory(
         val progressWidth = width * (abs(percent).coerceIn(0.0, 100.0) / 100.0).toFloat()
         if (progressWidth > 0f) {
             paint.color = progressColor
-            canvas.drawRoundRect(0f, 0f, progressWidth, height.toFloat(), radius, radius, paint)
+            val fillLeft = if (percent < 0) width - progressWidth else 0f
+            canvas.drawRoundRect(fillLeft, 0f, fillLeft + progressWidth, height.toFloat(), radius, radius, paint)
         }
         return bitmap
     }

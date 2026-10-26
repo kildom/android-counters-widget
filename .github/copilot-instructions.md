@@ -99,7 +99,7 @@
   - The counter's name.
   - The percentage of time left until the target date, calculated as `((targetDate - currentDate) / period) * 100` and displayed with a percent sign.
     If percentage is less than 0, use the configurable overdue text color and retain the negative sign.
-  - A tall horizontal progress bar under the name, sized so the overlaid day label fits within its edges. The filled portion is based on the absolute percentage clamped to 0-100%. Use the positive color for non-negative percentages and the negative color for overdue percentages. The day text overlays the bar, displays `remaining of period`, and aligns left when the absolute percentage is greater than 50%, otherwise right; select track or fill text color to match that alignment/segment.
+  - A tall horizontal progress bar under the name, sized so the overlaid day label fits within its edges. The filled portion is based on the absolute percentage clamped to 0-100%. Positive progress fills left-to-right; negative (overdue) progress fills right-to-left. Use the positive color for non-negative percentages and the negative color for overdue percentages. The day text overlays the bar, displays `remaining of period`, and aligns left for positive progress above 50% and right for negative progress below -50%; reverse those alignments at or below the 50% magnitude. Select track or fill text color to match the segment under the label.
   - The numeric percentage remains unclamped and is displayed with a percent sign.
   - Tapping anywhere on the counter row opens its action menu; do not add a separate per-row three-dot button.
   - The action menu contains:
